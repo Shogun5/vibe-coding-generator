@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER-VIBE PROMPT GENERATOR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --neon-cyan: #00ffff; --neon-magenta: #ff00ff; --bg-dark: #050505; }
+        body { background-color: var(--bg-dark); color: var(--neon-cyan); font-family: 'JetBrains Mono', 'Courier New', monospace; padding-bottom: 50px; overflow-x: hidden; }
+        .cyber-border { border: 1px solid var(--neon-cyan); box-shadow: 0 0 8px rgba(0, 255, 255, 0.2); }
+        .cyber-border-magenta { border: 1px solid var(--neon-magenta); box-shadow: 0 0 8px rgba(255, 0, 255, 0.2); }
+        .cyber-border-yellow { border: 1px solid #eab308; box-shadow: 0 0 8px rgba(234, 179, 8, 0.2); }
+        .cyber-btn { border: 1px solid var(--neon-cyan); background: transparent; color: var(--neon-cyan); transition: 0.3s; cursor: pointer; }
+        .cyber-btn:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px var(--neon-cyan); }
+        .cyber-btn-magenta { border: 1px solid var(--neon-magenta); color: var(--neon-magenta); cursor: pointer; transition: 0.3s;}
+        .cyber-btn-magenta:hover { background: var(--neon-magenta); color: #fff; box-shadow: 0 0 15px var(--neon-magenta); }
+        .cyber-btn-yellow { border: 1px solid #eab308; color: #eab308; cursor: pointer; transition: 0.3s;}
+        .cyber-btn-yellow:hover { background: #eab308; color: #000; box-shadow: 0 0 15px #eab308; }
+        .cyber-input { background: #111; border: 1px solid #333; color: #fff; }
+        .cyber-input:focus { outline: none; border-color: var(--neon-magenta); }
+        .module-card { background: rgba(0,20,20,0.5); transition: transform 0.2s; }
+        .module-badge { background: var(--neon-magenta); color: #000; font-weight: bold; padding: 2px 8px; font-size: 10px; border-radius: 4px; }
+        
+        /* Tabs Style */
+        .tab-btn { padding: 12px 24px; font-weight: bold; border: 1px solid #333; color: #666; cursor: pointer; transition: 0.3s; border-bottom: none; border-radius: 8px 8px 0 0; }
+        .tab-btn.active { color: var(--neon-cyan); border-color: var(--neon-cyan); background: rgba(0, 255, 255, 0.05); box-shadow: 0 -5px 15px rgba(0,255,255,0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Custom Radio */
+        .cyber-radio { appearance: none; width: 16px; height: 16px; border: 2px solid var(--neon-cyan); border-radius: 50%; background: transparent; cursor: pointer; position: relative; top: 3px; margin-right: 8px;}
+        .cyber-radio:checked { background: var(--neon-magenta); border-color: var(--neon-magenta); box-shadow: 0 0 10px var(--neon-magenta); }
+
+        select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300ffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
+    </style>
+</head>
+<body class="max-w-6xl mx-auto p-6">
+
+    <header class="mb-6 text-center pb-4">
+        <h1 class="text-4xl font-black italic tracking-widest mb-2" style="text-shadow: 2px 2px var(--neon-magenta);">CYBER-VIBE PROMPT GENERATOR</h1>
+        <div id="statusIndicator" class="text-xs text-yellow-500 animate-pulse">SYSTEM_BOOTING: 正在連線至資料庫...</div>
+    </header>
+
+	<div class="flex justify-center border-b border-gray-800 mb-8 space-x-2">
+		<button class="tab-btn" onclick="switchTab('tab-env')">🔧 環境建置 (ENV_SETUP)</button>
+        <button class="tab-btn active" onclick="switchTab('tab-generator')">🧙‍♂️ 咒語編譯器 (PROMPT_GEN)</button>
+        <button class="tab-btn" onclick="switchTab('tab-docs')">📚 文獻與探索工具 (DOCS & EXPLORER)</button>   
+    </div>
+
+    <div id="tab-generator" class="tab-content active">
+        
+        <div class="mb-8 p-6 cyber-border-magenta bg-black relative">
+            <h2 class="text-xl font-bold mb-4 text-magenta-500 flex items-center">🔍 智慧全局搜尋 (SMART_SEARCH)</h2>
+            <input type="text" id="globalSearch" class="w-full p-4 cyber-input text-lg text-cyan-300 mb-2" placeholder="輸入關鍵字 (例如：濾波、迴圈、OpenCV)..." onkeyup="performSearch()">
+            <div id="searchResults" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto"></div>
+        </div>
+		
+        <div class="mb-8 p-6 cyber-border-yellow bg-black relative">
+            <h2 class="text-xl font-bold mb-4 text-yellow-500 flex items-center">
+                <span class="mr-2">⚡</span> 快速連續技 (Combo Presets)
+            </h2>
+            <p class="text-sm text-gray-400 mb-4">懶得慢慢疊加模組？直接選擇常用的完整連段，一鍵產生提示詞！</p>
+            <div class="flex flex-col md:flex-row gap-4">
+                <select id="comboSelect" class="flex-grow p-3 cyber-input text-sm text-yellow-300">
+                    <option value="">-- 請選擇 Combo 連續技 --</option>
+                    <option value="請幫我把 [檔案位址] 的 CSV 檔案資料進行讀取，請產生互動視窗，讓我可以選擇不同欄位，並把欄位中的資料以折線圖呈現。">【互動折線圖 UI】讀取CSV並建立選擇欄位的折線圖介面</option>
+                    <option value="請幫我開啟系統上的鏡頭，我要呈現出火柴人骨架(MediaPipe)，另外提供個選單讓我可以選擇不同的關節點，並顯示出它的 X, Y 值來，也可以點選螢幕位置來得知影片中 pixel XY 座標。">【AI骨架與座標提取】Webcam火柴人與點擊獲取座標</option>
+                    <option value="請幫我把 [網站網址] 中 class 為 [Class名稱] 的所有資料彙整下來，並存成一個 CSV 檔案。">【網頁資料爬蟲】鎖定特定 Class 抓取資料並存成 CSV</option>
+                    <option value="請讀取 [檔案位址] 的訊號資料，設計一個 Butterworth 低通濾波器 (截止頻率 [X] Hz) 去除雜訊。請在同一張圖上畫出「原始訊號」與「濾波後訊號」的折線圖疊加比較。">【濾波與對照圖】低通濾波處理與畫出對照疊加圖</option>
+                    <option value="請讀取影片 [檔案位址]，擷取第 [X] 秒到第 [Y] 秒的片段，並將這段影片的速度放慢為 0.5 倍速，最後儲存為新的 MP4 檔案。">【影片剪輯與變速】擷取特定片段並慢動作輸出 MP4</option>
+                    <option value="請讀取 [檔案位址] 的數據，使用 [目標欄位] 作為預測標籤。訓練一個隨機森林 (Random Forest) 分類模型，並畫出混淆矩陣 (Confusion Matrix) 與特徵重要性長條圖。">【機器學習與評估】訓練隨機森林並畫出混淆矩陣</option>
+                    <option value="請自動讀取 [資料夾路徑] 底下的所有 CSV 檔案，迴圈計算每個檔案中 [目標欄位] 的平均值與最大值，最後將所有結果合併，匯出成一份總表 Excel 檔。">【批次處理與合併】自動讀取資料夾所有CSV並整理成總表</option>
+                    <option value="請讀取音訊檔 [檔案位址]，計算其 RMS 能量曲線並找出最大聲的時間點，最後畫出時頻譜圖 (Spectrogram) 以視覺化頻率與強度變化。">【音訊能量與頻譜】計算 RMS 能量與畫出 Spectrogram</option>
+                    <option value="請讀取實驗數據 [檔案位址]，針對 [組別A] 與 [組別B] 的 [數值欄位] 進行獨立樣本 T 檢定。請輸出 P 值，並畫出包含離群值的箱型圖 (Boxplot)。">【統計檢定與箱型圖】獨立樣本 T 檢定與箱型圖繪製</option>
+                    <option value="請使用 Pygame 建立一個視窗。當讀取到的 [訊號變數] 超過 [門檻值] 時，畫面上的圓形角色要往上跳躍，並播放得分音效，同時在畫面上顯示目前總分。">【生物回饋小遊戲】Pygame數值超標觸發跳躍與音效</option>
+                </select>
+                <button onclick="applyCombo()" class="cyber-btn-yellow px-8 py-3 font-bold whitespace-nowrap">套用連續技</button>
+            </div>
+        </div>
+
+        <div class="mb-8 p-6 cyber-border">
+            <h2 class="text-xl font-bold mb-4 text-magenta-500">STEP 1: 選擇 AI 角色前置詞</h2>
+            <select id="prefixSelect" class="w-full p-3 cyber-input text-cyan-400">
+                <option value="你現在是一位資深的 Python 軟體工程師。請完成以下需求，並加上詳細中文註解：">【中文 - 資深架構師】</option>
+                <option value="請扮演運動科學與訊號處理專家。使用 NumPy, Pandas 和 SciPy 完成數據處理：">【中文 - 訊號處理專家】</option>
+                <option value="我是一位 Python 初學者，請寫出程式碼並逐行白話解釋運作原理：">【中文 - 新手教學模式】</option>
+            </select>
+        </div>
+
+        <div class="mb-4 flex justify-between items-end">
+            <h2 class="text-xl font-bold text-magenta-500">STEP 2: 疊加咒語模組 (可排序編號)</h2>
+            <button onclick="addModule()" class="cyber-btn px-4 py-2 text-sm font-bold">+ 新增空白模組</button>
+        </div>
+        
+        <div id="modulesContainer" class="space-y-4 mb-8"></div>
+
+        <div class="p-6 cyber-border bg-black">
+            <h2 class="text-xl font-bold mb-4 text-magenta-500">STEP 3: 修改策略與編譯</h2>
+            
+            <div class="mb-6 p-5 border border-gray-700 bg-gray-900 rounded">
+                <h3 class="text-yellow-400 font-bold mb-4 text-sm">🛠️ 程式碼修改策略 (Modification Strategy)</h3>
+                <div class="space-y-3 text-sm text-gray-300">
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="modStrategy" value="default" class="cyber-radio" checked onchange="toggleCustomInput()"><span>🆕 全新生成 (New Project)</span></label>
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="modStrategy" value="small" class="cyber-radio" onchange="toggleCustomInput()"><span>🟢 局部微調 (僅提供修改片段與放置位置)</span></label>
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="modStrategy" value="large" class="cyber-radio" onchange="toggleCustomInput()"><span>🔴 大範圍重構 (提供完整新程式碼)</span></label>
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="modStrategy" value="attached" class="cyber-radio" onchange="toggleCustomInput()"><span>📎 依最新附檔修改 (依據上傳檔案進行微調)</span></label>
+                    <label class="flex items-center cursor-pointer"><input type="radio" name="modStrategy" value="custom" class="cyber-radio" onchange="toggleCustomInput()"><span>✍️ 自訂指令 (例如：請將 #02 放入 #01 內)</span></label>
+                </div>
+                <textarea id="customStrategyInput" class="hidden w-full mt-4 p-3 cyber-input text-sm text-yellow-300" rows="3" placeholder="請在此輸入自訂 prompt 指令..."></textarea>
+            </div>
+
+            <button onclick="generateFinalPrompt()" class="cyber-btn-magenta w-full py-3 font-bold text-lg mb-4">>>> 啟動編譯 (GENERATE) <<<</button>
+            <textarea id="finalOutput" class="w-full h-64 p-4 cyber-input text-green-400 font-mono text-sm leading-relaxed mb-4"></textarea>
+            <button onclick="copyFinal()" class="cyber-btn w-full py-3 font-bold">複製完整咒語 (COPY)</button>
+        </div>
+    </div>
+
+    <div id="tab-docs" class="tab-content">
+        <div class="mb-8 p-6 cyber-border-yellow bg-black">
+            <h2 class="text-xl font-bold mb-2 text-yellow-500">📡 Python 函式庫雷達探測器</h2>
+            <div class="flex flex-col md:flex-row gap-4 mt-4">
+                <input type="text" id="explorer-module-name" class="flex-grow p-3 cyber-input text-yellow-300" placeholder="套件名稱 (例如: scipy.signal)" value="scipy.signal">
+                <button onclick="downloadExplorerPy()" class="cyber-btn-yellow px-8 py-3 font-bold">⬇️ 下載探測腳本</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-magenta-500 mb-2">SciPy</h3>
+                <input type="text" id="search-scipy" class="w-full p-2 cyber-input mb-4" placeholder="例如: filtfilt">
+                <button onclick="searchDocs('scipy', 'docs.scipy.org/doc/scipy/reference/')" class="cyber-btn w-full py-2">🔍 搜尋</button>
+            </div>
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-magenta-500 mb-2">Pandas</h3>
+                <input type="text" id="search-pandas" class="w-full p-2 cyber-input mb-4" placeholder="例如: read_csv">
+                <button onclick="searchDocs('pandas', 'pandas.pydata.org/docs/reference/')" class="cyber-btn w-full py-2">🔍 搜尋</button>
+            </div>
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-magenta-500 mb-2">OpenCV</h3>
+                <input type="text" id="search-opencv" class="w-full p-2 cyber-input mb-4" placeholder="例如: cvtColor">
+                <button onclick="searchDocs('opencv', 'docs.opencv.org/4.x/')" class="cyber-btn w-full py-2">🔍 搜尋</button>
+            </div>
+			<div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-magenta-500 mb-2">Scikit-Learn</h3>
+                <input type="text" id="search-sklearn" class="w-full p-2 cyber-input mb-4" placeholder="例如: RandomForest">
+                <button onclick="searchDocs('sklearn', 'scikit-learn.org/stable/modules/')" class="cyber-btn w-full py-2">🔍 搜尋</button>
+            </div>
+
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-magenta-500 mb-2">Plotly</h3>
+                <input type="text" id="search-plotly" class="w-full p-2 cyber-input mb-4" placeholder="例如: px.scatter">
+                <button onclick="searchDocs('plotly', 'plotly.com/python/')" class="cyber-btn w-full py-2">🔍 搜尋</button>
+            </div>
+
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-magenta-500 mb-2">Flet (UI)</h3>
+                <input type="text" id="search-flet" class="w-full p-2 cyber-input mb-4" placeholder="例如: ElevatedButton">
+                <button onclick="searchDocs('flet', 'flet.dev/docs/controls/')" class="cyber-btn w-full py-2">🔍 搜尋</button>
+            </div>
+            
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-magenta-500 mb-2">Pygame</h3>
+                <input type="text" id="search-pygame" class="w-full p-2 cyber-input mb-4" placeholder="例如: display.set_mode">
+                <button onclick="searchDocs('pygame', 'pygame.org/docs/')" class="cyber-btn w-full py-2">🔍 搜尋</button>
+            </div>
+            
+            <div class="p-6 cyber-border bg-gray-900 md:col-span-2 lg:col-span-3">
+                <h3 class="font-bold text-cyan-500 mb-2">Stack Overflow / 綜合解題</h3>
+                <input type="text" id="search-general" class="w-full p-2 cyber-input mb-4" placeholder="遇到未知的報錯訊息？直接貼到這裡...">
+                <button onclick="searchDocs('general', 'stackoverflow.com')" class="cyber-btn-magenta w-full py-2">🌐 搜尋 Stack Overflow 解決方案</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-env" class="tab-content">
+        <div class="mb-8 text-center">
+            <h2 class="text-3xl font-bold text-cyan-400 mb-2">ENVIRONMENT SETUP</h2>
+            <p class="text-gray-400">新手專區：安裝 Miniconda 並一鍵建立專屬開發環境。</p>
+        </div>
+
+        <div class="mb-8 p-6 cyber-border-magenta bg-black">
+            <h2 class="text-xl font-bold mb-2 text-magenta-500 flex items-center">
+                <span class="mr-2">📄</span> 步驟 0：編輯並下載環境設定檔 (vibe_sport.yml)
+            </h2>
+            <p class="text-sm text-gray-400 mb-4">您可以直接在下方文字框內修改、新增或刪除需要的套件。確認無誤後點擊下載。</p>
+            <div class="flex justify-center">
+                <button onclick="downloadEnvYml()" class="cyber-btn-magenta px-8 py-3 font-bold tracking-wider w-full">⬇️ 點擊產生並下載 vibe_sport.yml</button>
+            </div>
+            <textarea id="ymlEditor" class="mt-4 p-4 bg-gray-900 border border-gray-700 rounded text-xs text-green-400 font-mono w-full h-48 focus:outline-none focus:border-cyan-500" spellcheck="false">
+name: vibe_sport
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - spyder
+  - spyder-kernels
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - openpyxl
+  - pip
+  - pip:
+      - plotly
+      - pingouin
+      - moviepy
+      - opencv-python
+      - mediapipe
+      - customtkinter
+      - pyinstaller
+      - pyserial
+      - bleak
+      - playwright
+      - beautifulsoup4
+      - librosa
+      - tqdm</textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-lg text-cyan-400 mb-2">STEP 1: 下載 Miniconda</h3>
+                <p class="text-gray-400 text-sm">請前往官網下載適用於您作業系統的 Miniconda 安裝檔 (建議選擇 Python 3.10 以上版本)。</p>
+                <a href="https://docs.anaconda.com/miniconda/" target="_blank" class="block mt-4 text-center border border-cyan-500 text-cyan-500 hover:bg-cyan-500 hover:text-black py-2 transition text-sm">🔗 前往 Miniconda 官網</a>
+            </div>
+            
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-lg text-cyan-400 mb-2">STEP 2: 安裝 Miniconda</h3>
+                <p class="text-gray-400 text-sm">執行安裝檔。建議設定如下：<br>1. 選擇 <b>Just Me</b>。<br>2. 安裝路徑保持預設。<br>3. <b>不需勾選</b> Add to PATH (維持預設即可)。<br>4. 勾選 Register Miniconda as my default Python。</p>
+            </div>
+
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-lg text-cyan-400 mb-2">STEP 3: 放置設定檔</h3>
+                <p class="text-gray-400 text-sm">請將上方下載的 <code class="text-magenta-400 bg-gray-900 px-1">vibe_sport.yml</code>，放在您的使用者資料夾 <code class="text-yellow-300 bg-gray-900 px-1">C:\Users\您的名字</code> (如果放在桌面，下一步終端機需先輸入 cd Desktop 切換路徑)。</p>
+            </div>
+
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-lg text-cyan-400 mb-2">STEP 4: 開啟終端機</h3>
+                <p class="text-gray-400 text-sm">在 Windows 左下角搜尋列輸入並打開 <code class="text-yellow-300 bg-gray-900 px-1">Anaconda Prompt (Miniconda3)</code> (黑底白字的視窗)。</p>
+            </div>
+
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-lg text-cyan-400 mb-2">STEP 5: 建立與啟動環境</h3>
+                <p class="text-gray-400 text-sm">在黑視窗中輸入以下指令建立環境 (需等待一段時間下載套件)：</p>
+                <div class="mt-2 p-2 bg-gray-900 border border-gray-700 text-green-400 font-mono text-xs select-all cursor-pointer">
+                    conda env create -f vibe_sport.yml
+                </div>
+                <p class="text-gray-400 text-sm mt-2">完成後啟動環境：</p>
+                <div class="mt-1 p-2 bg-gray-900 border border-gray-700 text-green-400 font-mono text-xs select-all cursor-pointer">
+                    conda activate vibe_sport
+                </div>
+            </div>
+
+            <div class="p-6 cyber-border bg-black">
+                <h3 class="font-bold text-lg text-cyan-400 mb-2">STEP 6: 開啟 Spyder</h3>
+                <p class="text-gray-400 text-sm">確保終端機左側括號顯示 <span class="text-yellow-300">(vibe_sport)</span> 後，輸入以下指令即可啟動開發環境！</p>
+                <div class="mt-2 p-3 bg-gray-900 border border-gray-700 text-green-400 font-mono text-sm select-all cursor-pointer">
+                    spyder
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbz94YXoKDBo88MwYvW5cCLnib4CVkcUdy9WP4RUJ9zft5VO4jv73DBZou8_ImCZlWX5IQ/exec"; 
+        let sheetData = [];
+        let categoryMap = {};
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+		
+		// 負責下載 yaml 檔案的函式
+        function downloadEnvYml() {
+            // 從可編輯的 textarea 中抓取使用者確認後的 yaml 內容
+            const ymlContent = document.getElementById('ymlEditor').value;
+            const blob = new Blob([ymlContent], { type: "text/yaml;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "vibe_sport.yml";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function toggleCustomInput() {
+            const strategy = document.querySelector('input[name="modStrategy"]:checked').value;
+            document.getElementById('customStrategyInput').classList.toggle('hidden', strategy !== 'custom');
+        }
+
+        async function init() {
+            try {
+                const response = await fetch(API_URL);
+                sheetData = await response.json();
+                sheetData.forEach(row => {
+                    const cat = row["主要分類"];
+                    if (cat) {
+                        if (!categoryMap[cat]) categoryMap[cat] = [];
+                        categoryMap[cat].push(row);
+                    }
+                });
+                document.getElementById('statusIndicator').innerText = `SYSTEM_ONLINE / 載入 ${sheetData.length} 筆資料`;
+                document.getElementById('statusIndicator').className = "text-xs text-green-500";
+                addModule();
+            } catch (e) {
+                document.getElementById('statusIndicator').innerText = "連線失敗";
+            }
+        }
+
+        function refreshModuleNumbers() {
+            const modules = document.querySelectorAll('.module-card');
+            modules.forEach((mod, index) => {
+                const num = (index + 1).toString().padStart(2, '0');
+                mod.querySelector('.module-id-label').innerText = `#${num}`;
+            });
+        }
+
+        window.addModule = function() {
+            const container = document.getElementById('modulesContainer');
+            const moduleId = 'mod_' + Date.now();
+            let catOptions = `<option value="">-- 選擇分類 --</option>`;
+            for (let cat in categoryMap) catOptions += `<option value="${cat}">${cat}</option>`;
+
+            const moduleHTML = `
+                <div id="${moduleId}" class="module-card cyber-border p-4 relative mb-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="module-badge">MODULE <span class="module-id-label">#00</span></span>
+                        <div class="flex space-x-2">
+                            <button onclick="moveUp('${moduleId}')" class="text-cyan-500 px-2 hover:bg-cyan-900 rounded">▲</button>
+                            <button onclick="moveDown('${moduleId}')" class="text-cyan-500 px-2 hover:bg-cyan-900 rounded">▼</button>
+                            <button onclick="deleteModule('${moduleId}')" class="text-red-500 px-2 hover:bg-red-900 rounded">✖</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <select class="main-cat w-full p-2 cyber-input text-xs" onchange="updateSubCat('${moduleId}')">${catOptions}</select>
+                        <select class="sub-cat w-full p-2 cyber-input text-xs" onchange="updateDetails('${moduleId}')"><option value="">-- 關鍵字 --</option></select>
+                    </div>
+                    <div class="mt-4 text-xs">
+                        <span class="intent-text text-yellow-300 block mb-1">...</span>
+                        <code class="func-text text-green-300">...</code>
+                    </div>
+                    <div class="param-container hidden mt-2 bg-gray-900 p-2 border border-dashed border-magenta-500">
+                        <span class="param-hint text-[10px] text-gray-400 block mb-1"></span>
+                        <input type="text" class="param-input w-full p-2 cyber-input text-xs text-yellow-300">
+                    </div>
+                    <textarea class="prompt-data hidden"></textarea>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', moduleHTML);
+            refreshModuleNumbers();
+            return moduleId;
+        };
+
+        window.updateSubCat = function(id) {
+            const mod = document.getElementById(id);
+            const mainCat = mod.querySelector('.main-cat').value;
+            const subSelect = mod.querySelector('.sub-cat');
+            subSelect.innerHTML = '<option value="">-- 關鍵字 --</option>';
+            if (categoryMap[mainCat]) {
+                categoryMap[mainCat].forEach((item, idx) => {
+                    subSelect.insertAdjacentHTML('beforeend', `<option value="${idx}">${item["關鍵字 (Tags)"]}</option>`);
+                });
+            }
+        };
+
+		window.updateDetails = function(id) {
+            const mod = document.getElementById(id);
+            const mainCat = mod.querySelector('.main-cat').value;
+            const subIdx = mod.querySelector('.sub-cat').value;
+            if (subIdx === "") return;
+            
+            const data = categoryMap[mainCat][subIdx];
+            
+            const targetFunc = data["對應套件/函式"] || data["對應 Scipy 函式"] || "N/A";
+            const userIntent = data["學生遇到的狀況 (User Intent)"] || "無描述";
+            const vibePrompt = data["Vibe 咒語 (Prompt)"] || "";
+            const paramField = data["參數填空"] || "";
+
+            mod.querySelector('.intent-text').innerText = userIntent.split(" / ")[0];
+            mod.querySelector('.func-text').innerText = targetFunc;
+            mod.querySelector('.prompt-data').value = vibePrompt;
+
+            const pc = mod.querySelector('.param-container');
+            if (paramField && !paramField.includes("無") && !paramField.includes("None")) {
+                pc.classList.remove('hidden');
+                mod.querySelector('.param-hint').innerText = paramField;
+            } else { 
+                pc.classList.add('hidden'); 
+            }
+        };
+
+        window.deleteModule = function(id) { document.getElementById(id).remove(); refreshModuleNumbers(); };
+        window.moveUp = function(id) { const el = document.getElementById(id); if (el.previousElementSibling) { el.parentNode.insertBefore(el, el.previousElementSibling); refreshModuleNumbers(); } };
+        window.moveDown = function(id) { const el = document.getElementById(id); if (el.nextElementSibling) { el.parentNode.insertBefore(el.nextElementSibling, el); refreshModuleNumbers(); } };
+
+        window.generateFinalPrompt = function() {
+            const prefix = document.getElementById('prefixSelect').value;
+            const strategy = document.querySelector('input[name="modStrategy"]:checked').value;
+            const modules = document.querySelectorAll('.module-card');
+            let finalString = prefix + "\n\n";
+            let count = 0;
+
+            modules.forEach((mod, index) => {
+                const num = (index + 1).toString().padStart(2, '0');
+                const prompt = mod.querySelector('.prompt-data').value;
+                const paramValue = mod.querySelector('.param-input').value.trim();
+                if (prompt) {
+                    const isEnd = paramValue.includes("結束") || paramValue.toLowerCase().includes("end");
+                    if (isEnd) {
+                        finalString += `[Module #${num}] 🛑 邏輯結束點 (Scope End)：\n使用者指定：${paramValue}。請在此處精確關閉對應的縮排層級。\n--------------------\n`;
+                    } else {
+                        finalString += `[Module #${num}]\n${prompt}${paramValue ? "\n(設定參數：" + paramValue + ")" : ""}\n--------------------\n`;
+                    }
+                    count++;
+                }
+            });
+
+            const strictRule = "請嚴格保持原始架構排版、變數命名與 UI 設計。只進行局部微調，禁止擅自重構。";
+            if (strategy === 'small') finalString += `\n【策略：局部微調】\n請僅提供修改片段與放置位置。指引：${strictRule}`;
+            else if (strategy === 'large') finalString += `\n【策略：大範圍重構】\n請提供完整且正確的新程式碼。指引：${strictRule}`;
+            else if (strategy === 'attached') finalString += `\n【策略：依附檔修改】\n請基於我最新上傳的附件進行修改。指引：${strictRule}`;
+            else if (strategy === 'custom') finalString += `\n【策略：自訂規則】\n${document.getElementById('customStrategyInput').value}`;
+
+            document.getElementById('finalOutput').value = finalString;
+        };
+
+		// 執行 Combo 連續技的函式
+        window.applyCombo = function() {
+            const comboText = document.getElementById('comboSelect').value;
+            if (!comboText) {
+                alert("請先在下拉選單選擇一個 Combo 連續技！");
+                return;
+            }
+            
+            const prefix = document.getElementById('prefixSelect').value;
+            const finalString = prefix + 
+                "\n\n====================\n【⚡ 快速連續技 (Combo)】\n" + 
+                comboText + 
+                "\n\n====================\n【🛡️ 架構保護指令】\n請嚴格保持原始架構排版、變數命名與 UI 設計。只進行局部微調，禁止擅自重構。";
+            
+            document.getElementById('finalOutput').value = finalString;
+            document.getElementById('finalOutput').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            const outputBox = document.getElementById('finalOutput');
+            outputBox.style.animation = "flash-border 0.5s 2";
+            setTimeout(() => { outputBox.style.animation = ""; }, 1000);
+        };
+
+        window.copyFinal = function() {
+            const out = document.getElementById('finalOutput');
+            out.select();
+            document.execCommand('copy');
+            alert("已複製！");
+        };
+
+        function performSearch() {
+            const query = document.getElementById('globalSearch').value.toLowerCase().trim();
+            const res = document.getElementById('searchResults');
+            res.innerHTML = '';
+            if (!query) return;
+            let matches = [];
+            for (let cat in categoryMap) {
+                categoryMap[cat].forEach((item, idx) => {
+                    if (JSON.stringify(item).toLowerCase().includes(query)) matches.push({ cat, idx, item });
+                });
+            }
+            matches.slice(0, 8).forEach(m => {
+                const btn = document.createElement('button');
+                btn.className = "text-left p-2 border border-gray-800 bg-gray-900 hover:border-cyan-400 text-xs";
+                btn.innerHTML = `<span class="text-magenta-400 font-bold">${m.item["關鍵字 (Tags)"]}</span><br><span class="text-gray-500">${m.item["主要分類"]}</span>`;
+                btn.onclick = () => {
+                    const id = addModule();
+                    const mod = document.getElementById(id);
+                    mod.querySelector('.main-cat').value = m.cat;
+                    updateSubCat(id);
+                    mod.querySelector('.sub-cat').value = m.idx;
+                    updateDetails(id);
+                    res.innerHTML = '';
+                    document.getElementById('globalSearch').value = '';
+                };
+                res.appendChild(btn);
+            });
+        }
+
+        function downloadExplorerPy() {
+            let m = document.getElementById('explorer-module-name').value.trim().toLowerCase();
+            const py = `import importlib, inspect, pandas as pd, os\ndef explore(n):\n try:\n  mod=importlib.import_module(n)\n  data=[{"Type": "Func" if inspect.isfunction(o) else "Class", "Name": k, "Doc": (inspect.getdoc(o) or "").split("\\n")[0]} for k,o in inspect.getmembers(mod) if not k.startswith("_")]\n  df=pd.DataFrame(data)\n  fn=f"{n.replace('.','_')}_dict.csv"\n  df.to_csv(fn, encoding="utf-8-sig", index=False)\n  print(f"✅ Saved to: {fn}")\n except Exception as e: print(e)\nexplore("${m}")`;
+            const blob = new Blob([py], { type: "text/plain" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `explore_${m}.py`;
+            a.click();
+        }
+
+        function searchDocs(id, url) {
+            const q = document.getElementById('search-' + id).value;
+            window.open(`https://www.google.com/search?q=site:${url}+${q}`, '_blank');
+        }
+
+        init();
+    </script>
+</body>
+</html>
