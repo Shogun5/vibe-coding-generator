@@ -305,10 +305,11 @@ dependencies:
                         if (cat.trim() === "Combo連續技") {
                             const comboName = row["關鍵字 (Tags)"] || "未命名 Combo";
                             const comboPrompt = row["Vibe 咒語 (Prompt)"] || "";
-                            if (comboPrompt) {
-                                // 將 Combo 的咒語作為 value，關鍵字作為顯示名稱
-                                comboSelect.insertAdjacentHTML('beforeend', `<option value="${comboPrompt}">${comboName}</option>`);
-                            }
+							if (comboPrompt) {
+							    // 【修復截斷 Bug】將雙引號替換為安全的 HTML 實體碼
+							    const safePrompt = comboPrompt.replace(/"/g, '&quot;');
+							    comboSelect.insertAdjacentHTML('beforeend', `<option value="${safePrompt}">${comboName}</option>`);
+							}
                         } 
                         // 否則，將其歸類到一般的模組分類庫中
                         else {
@@ -520,4 +521,5 @@ dependencies:
 </body>
 
 </html>
+
 
