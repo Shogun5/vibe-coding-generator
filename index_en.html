@@ -69,16 +69,6 @@
             <div class="flex flex-col md:flex-row gap-4">
                 <select id="comboSelect" class="flex-grow p-3 cyber-input text-sm text-yellow-300">
                     <option value="">-- Select a Combo Preset --</option>
-                    <option value="Please read the CSV file at [File Path] and generate an interactive GUI. Allow me to select different columns and plot the selected data as a line chart.">[Interactive Line Chart UI] Read CSV & plot selected columns</option>
-                    <option value="Please access the system webcam to display a MediaPipe stickman skeleton. Provide a menu to select specific joints and display their X, Y coordinates. Also, allow me to click on the screen to get the pixel XY coordinates.">[AI Skeleton & Coordinates] Webcam stickman + click coordinates</option>
-                    <option value="Please scrape all data from elements with the class [Class Name] on the website [URL], compile the data, and save it as a CSV file.">[Web Scraper] Scrape specific Class data and save as CSV</option>
-                    <option value="Please read the signal data at [File Path]. Design a Butterworth low-pass filter (cutoff frequency [X] Hz) to remove noise. Plot the 'original signal' and 'filtered signal' superimposed on the same line chart for comparison.">[Filter & Compare] Low-pass filter & superimposed plot</option>
-                    <option value="Please read the video at [File Path], extract the clip from [X] seconds to [Y] seconds, slow the playback speed down to 0.5x, and save it as a new MP4 file.">[Video Edit & Speed] Extract clip & export slow-mo MP4</option>
-                    <option value="Please read the dataset at [File Path] and use the [Target Column] as the label. Train a Random Forest classifier, and plot both the Confusion Matrix and a Feature Importance bar chart.">[Machine Learning] Train Random Forest & plot Confusion Matrix</option>
-                    <option value="Please automatically read all CSV files in the directory [Folder Path]. Use a loop to calculate the mean and max values of the [Target Column] for each file, merge the results, and export them as a summary Excel file.">[Batch Process & Merge] Read folder CSVs & export summary Excel</option>
-                    <option value="Please read the audio file at [File Path], calculate its RMS energy curve to find the timestamp with the highest volume, and plot a Spectrogram to visualize frequency and intensity changes.">[Audio Energy & Spectrum] Calculate RMS & plot Spectrogram</option>
-                    <option value="Please read the experimental data at [File Path]. Perform an Independent Samples T-Test on the [Value Column] between [Group A] and [Group B]. Output the P-value and plot a Boxplot that includes outliers.">[Stats & Boxplot] Independent T-Test & Boxplot</option>
-                    <option value="Please create a window using Pygame. When the [Signal Variable] exceeds the [Threshold], make the circular character on the screen jump, play a scoring sound effect, and display the current total score.">[Biofeedback Game] Pygame jump & sound on threshold</option>
                 </select>
                 <button onclick="applyCombo()" class="cyber-btn-yellow px-8 py-3 font-bold whitespace-nowrap">Apply Combo</button>
             </div>
@@ -298,15 +288,31 @@ dependencies:
 
         async function init() {
             try {
-                const response = await fetch(API_URL);
+				const response = await fetch(API_URL);
                 sheetData = await response.json();
+                
+                const comboSelect = document.getElementById('comboSelect');
+                
                 sheetData.forEach(row => {
                     const cat = row["主要分類"];
                     if (cat) {
-                        if (!categoryMap[cat]) categoryMap[cat] = [];
-                        categoryMap[cat].push(row);
+                        // Check: If it's a Combo, add it to the top Quick Combo Preset dropdown
+                        if (cat.trim() === "Combo連續技" || cat.trim() === "Combo Presets") {
+                            const comboName = row["關鍵字 (Tags)"] || "Unnamed Combo";
+                            const comboPrompt = row["Vibe 咒語 (Prompt)"] || "";
+                            if (comboPrompt) {
+                                // Use the Combo's prompt as the value, and the keyword tag as the display name
+                                comboSelect.insertAdjacentHTML('beforeend', `<option value="${comboPrompt}">${comboName}</option>`);
+                            }
+                        } 
+                        // Otherwise, categorize it into the standard module library
+                        else {
+                            if (!categoryMap[cat]) categoryMap[cat] = [];
+                            categoryMap[cat].push(row);
+                        }
                     }
                 });
+                
                 document.getElementById('statusIndicator').innerText = `SYSTEM_ONLINE / Loaded ${sheetData.length} modules`;
                 document.getElementById('statusIndicator').className = "text-xs text-green-500";
                 addModule();
@@ -512,3 +518,4 @@ dependencies:
 </body>
 
 </html>
+
