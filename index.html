@@ -67,19 +67,9 @@
             </h2>
             <p class="text-sm text-gray-400 mb-4">懶得慢慢疊加模組？直接選擇常用的完整連段，一鍵產生提示詞！</p>
             <div class="flex flex-col md:flex-row gap-4">
-                <select id="comboSelect" class="flex-grow p-3 cyber-input text-sm text-yellow-300">
+				<select id="comboSelect" class="flex-grow p-3 cyber-input text-sm text-yellow-300">
                     <option value="">-- 請選擇 Combo 連續技 --</option>
-                    <option value="請幫我把 [檔案位址] 的 CSV 檔案資料進行讀取，請產生互動視窗，讓我可以選擇不同欄位，並把欄位中的資料以折線圖呈現。">【互動折線圖 UI】讀取CSV並建立選擇欄位的折線圖介面</option>
-                    <option value="請幫我開啟系統上的鏡頭，我要呈現出火柴人骨架(MediaPipe)，另外提供個選單讓我可以選擇不同的關節點，並顯示出它的 X, Y 值來，也可以點選螢幕位置來得知影片中 pixel XY 座標。">【AI骨架與座標提取】Webcam火柴人與點擊獲取座標</option>
-                    <option value="請幫我把 [網站網址] 中 class 為 [Class名稱] 的所有資料彙整下來，並存成一個 CSV 檔案。">【網頁資料爬蟲】鎖定特定 Class 抓取資料並存成 CSV</option>
-                    <option value="請讀取 [檔案位址] 的訊號資料，設計一個 Butterworth 低通濾波器 (截止頻率 [X] Hz) 去除雜訊。請在同一張圖上畫出「原始訊號」與「濾波後訊號」的折線圖疊加比較。">【濾波與對照圖】低通濾波處理與畫出對照疊加圖</option>
-                    <option value="請讀取影片 [檔案位址]，擷取第 [X] 秒到第 [Y] 秒的片段，並將這段影片的速度放慢為 0.5 倍速，最後儲存為新的 MP4 檔案。">【影片剪輯與變速】擷取特定片段並慢動作輸出 MP4</option>
-                    <option value="請讀取 [檔案位址] 的數據，使用 [目標欄位] 作為預測標籤。訓練一個隨機森林 (Random Forest) 分類模型，並畫出混淆矩陣 (Confusion Matrix) 與特徵重要性長條圖。">【機器學習與評估】訓練隨機森林並畫出混淆矩陣</option>
-                    <option value="請自動讀取 [資料夾路徑] 底下的所有 CSV 檔案，迴圈計算每個檔案中 [目標欄位] 的平均值與最大值，最後將所有結果合併，匯出成一份總表 Excel 檔。">【批次處理與合併】自動讀取資料夾所有CSV並整理成總表</option>
-                    <option value="請讀取音訊檔 [檔案位址]，計算其 RMS 能量曲線並找出最大聲的時間點，最後畫出時頻譜圖 (Spectrogram) 以視覺化頻率與強度變化。">【音訊能量與頻譜】計算 RMS 能量與畫出 Spectrogram</option>
-                    <option value="請讀取實驗數據 [檔案位址]，針對 [組別A] 與 [組別B] 的 [數值欄位] 進行獨立樣本 T 檢定。請輸出 P 值，並畫出包含離群值的箱型圖 (Boxplot)。">【統計檢定與箱型圖】獨立樣本 T 檢定與箱型圖繪製</option>
-                    <option value="請使用 Pygame 建立一個視窗。當讀取到的 [訊號變數] 超過 [門檻值] 時，畫面上的圓形角色要往上跳躍，並播放得分音效，同時在畫面上顯示目前總分。">【生物回饋小遊戲】Pygame數值超標觸發跳躍與音效</option>
-                </select>
+                    </select>
                 <button onclick="applyCombo()" class="cyber-btn-yellow px-8 py-3 font-bold whitespace-nowrap">套用連續技</button>
             </div>
         </div>
@@ -303,15 +293,31 @@ dependencies:
 
         async function init() {
             try {
-                const response = await fetch(API_URL);
+				const response = await fetch(API_URL);
                 sheetData = await response.json();
+                
+                const comboSelect = document.getElementById('comboSelect');
+                
                 sheetData.forEach(row => {
                     const cat = row["主要分類"];
                     if (cat) {
-                        if (!categoryMap[cat]) categoryMap[cat] = [];
-                        categoryMap[cat].push(row);
+                        // 判斷：如果是 Combo，就將它加入上方快速連續技的選單
+                        if (cat.trim() === "Combo連續技") {
+                            const comboName = row["關鍵字 (Tags)"] || "未命名 Combo";
+                            const comboPrompt = row["Vibe 咒語 (Prompt)"] || "";
+                            if (comboPrompt) {
+                                // 將 Combo 的咒語作為 value，關鍵字作為顯示名稱
+                                comboSelect.insertAdjacentHTML('beforeend', `<option value="${comboPrompt}">${comboName}</option>`);
+                            }
+                        } 
+                        // 否則，將其歸類到一般的模組分類庫中
+                        else {
+                            if (!categoryMap[cat]) categoryMap[cat] = [];
+                            categoryMap[cat].push(row);
+                        }
                     }
                 });
+                
                 document.getElementById('statusIndicator').innerText = `SYSTEM_ONLINE / 載入 ${sheetData.length} 筆資料`;
                 document.getElementById('statusIndicator').className = "text-xs text-green-500";
                 addModule();
@@ -514,3 +520,4 @@ dependencies:
 </body>
 
 </html>
+
