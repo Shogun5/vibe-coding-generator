@@ -300,10 +300,11 @@ dependencies:
                         if (cat.trim() === "Combo連續技" || cat.trim() === "Combo Presets") {
                             const comboName = row["關鍵字 (Tags)"] || "Unnamed Combo";
                             const comboPrompt = row["Vibe 咒語 (Prompt)"] || "";
-                            if (comboPrompt) {
-                                // Use the Combo's prompt as the value, and the keyword tag as the display name
-                                comboSelect.insertAdjacentHTML('beforeend', `<option value="${comboPrompt}">${comboName}</option>`);
-                            }
+							if (comboPrompt) {
+							    // 【修復截斷 Bug】將雙引號替換為安全的 HTML 實體碼
+							    const safePrompt = comboPrompt.replace(/"/g, '&quot;');
+							    comboSelect.insertAdjacentHTML('beforeend', `<option value="${safePrompt}">${comboName}</option>`);
+							}
                         } 
                         // Otherwise, categorize it into the standard module library
                         else {
@@ -518,4 +519,5 @@ dependencies:
 </body>
 
 </html>
+
 
